@@ -19,8 +19,8 @@ in app\Policies:
 
 namespace App\Policies;
 
-use App\Post;
-use App\User;
+use App\Models\Post;
+use App\Models\User;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -29,7 +29,7 @@ class PostPolicy
 {
     use HandlesAuthorization;
 
-	  // war schon da!
+    // war schon da!
     public function viewAny(?User $user)
     {
         return true; // neu
@@ -56,6 +56,8 @@ oder:
 Die Gates auf die Methoden mappen:
 
 ```
+use App\Policies\PostPolicy;
+
 Gate::define('post-activity-umschalten', [PostPolicy::class, 'postActivityUmschalten']);
 
 Gate::define('posts-ansehen', [PostPolicy::class, 'postsAnsehen']);
