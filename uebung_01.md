@@ -35,7 +35,7 @@ Installation von Laravel per composer in der CMD im Ordner wo auch routinglarave
 composer create-project laravel/laravel advanced-laravel
 
 ```
-Laravel starten:
+Laravel starten aus dem neuen Ordner advanced-laravel per CMD:
 
 ```
 
