@@ -15,6 +15,8 @@ bei der 1. Policy wird der Ordner erst angelegt!!
 
 hier PostPolicy.php:
 
+Je nach Laravel Version sieht die Grundschablone immer etwas anders aus, in der Version 10 enthaelt sie viel Fehler ;-(
+
 ```
 <?php
 
