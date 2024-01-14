@@ -1,0 +1,289 @@
+**Übung 6:** Schreibe selbst Code und implementiere das Login System
+
+Baue in deine Laravel-Applikation das Login-System ein,
+falls du dies noch nicht gemacht hast. 
+
+Ein Nutzer soll sich anmelden, registrieren und abmelden können. 
+
+ACHTUNG:
+E-Mail-Verifizierung und Zurücksetzen des Passworts sind NICHT Teil der Übung. 
+
+Ich habe dazu kein Lösungsvideo gedreht. Vielmehr sind die einzelnen Videos dieser Lektion die Lösung. :) 
+
+Nutze diese Übung als Selbsttest, ob du das Thema verstanden hast.
+
+**Lösung: gemeinsam im Unterricht**
+
+
+
+1. 
+installieren des socialite-system:
+
+```
+
+composer require laravel/socialite
+
+``` 
+
+
+2.
+im /config Ordner die services.php Datei enthaelt die provider-Eintraege:
+
+Die Schnippsel kommen aus der socialite-website!!!!
+
+```
+
+'github' => [
+    'client_id' => env('GITHUB_KEY'),
+    'client_secret' => env('GITHUB_SECRET'),
+    'redirect' => env('GITHUB_REDIRECT_URI')
+],
+
+```
+
+3. 
+github oauth registrieren
+
+https://github.com/settings/applications/new
+
+```
+Application Name: advanced-laravel
+Homepage URL: http://advanced-laravel.test
+Authorization Callback URL: http://advanced-laravel.test/auth/github/callback
+
+Generate Client Secret:
+10XXXXcd57add7287785ec27beccf7bb6ccab520
+```
+
+https://github.com/settings/developers
+	
+4.
+in der .env Datei alles eintragen!!!:
+
+```
+GITHUB_KEY="abc04f6061xxxxx1b141"
+GITHUB_SECRET="108xxxxd57add7287785ec27beccf7bb6ccab520"
+GITHUB_REDIRECT_URI="http://advanced-laravel.test/auth/github/callback"
+```
+
+5.
+Der app/Http/Controllers/Auth\LoginController.php muss nun angepasst werden:
+
+```
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Providers\RouteServiceProvider;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
+
+use Laravel\Socialite\Facades\Socialite;
+
+class LoginController extends Controller
+{
+    /*
+    |--------------------------------------------------------------------------
+    | Login Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles authenticating users for the application and
+    | redirecting them to your home screen. The controller uses a trait
+    | to conveniently provide its functionality to your applications.
+    |
+    */
+
+    use AuthenticatesUsers;
+
+    /**
+     * Where to redirect users after login.
+     *
+     * @var string
+     */
+    protected $redirectTo = RouteServiceProvider::HOME;
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('guest')->except('logout');
+    }
+
+    public function redirectToProvider()
+    {
+        return Socialite::driver('github')->redirect();
+    }
+    public function handleProviderCallback()
+    {
+        $oauthUser = Socialite::driver('github')->user();
+	dd($oauthUser); // erster Test, ob Github authentifiziert hat!
+    }   
+}
+
+```
+
+6.
+in der web.php 2 routes einfügen:
+
+```
+// damit dies so funktioniert muss vorher der controller namespace global injiziert werden! 
+// Route::get('auth/github', 'Auth\LoginController@redirectToProvider');
+// Route::get('auth/github/callback', 'Auth\LoginController@handleProviderCallback');
+// alternativ:
+Route::get('auth/github', 'App\Http\Controllers\Auth\LoginController@redirectToProvider');
+Route::get('auth/github/callback', 'App\Http\Controllers\Auth\LoginController@handleProviderCallback');
+
+```
+
+Die Route zur Anmeldung bei Github ausprobieren:
+
+http://advanced-laravel.test/auth/github
+
+7.
+Neue Migration und Model für 1:1 Beziehung zum User-Modell erzeugen : SocialAuth
+
+```
+
+php artisan make:model SocialAuth -m 
+
+```
+
+8. 
+Die Migrations-Datei, die gerade erstellt wurde anpassen:
+
+```
+Schema::create('social_auths', function (Blueprint $table) {
+    $table->id();
+    $table->bigInteger('user_id');
+    $table->string('provider_name');
+    $table->string('provider_id')->unique();
+    $table->timestamps();
+});
+```` 
+
+9.
+migrieren
+
+```
+
+php artisan migrate
+
+```
+
+10.
+in  App\Models\User.php die folgende Methode hinzufügen:
+
+```
+public function oauth()
+{
+    return $this->hasOne('App\Models\SocialAuth');
+}
+```
+
+
+11.
+In SocialAuth.php in app\Models folgende Anpassung vornehmen:
+
+```
+protected $fillable = ['user_id', 'provider_name', 'provider_id'];
+
+public function user()
+{
+    return $this->belongsTo('App\Models\User');
+}
+
+```
+
+
+12.
+Im LoginController.php nocheinmal folgende namespaces bereitstellen und die Methode handleProviderCallback() überarbeiten:
+ 
+ ```
+....
+use App\Models\SocialAuth;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+....
+
+public function handleProviderCallback()
+{
+    $oauthUser = Socialite::driver('github')->user();
+
+    $oauthUser = $this->findOrCreateUser($oauthUser, 'github');
+
+    Auth::login($oauthUser, true);
+
+    return redirect($this->redirectTo);
+}
+
+public function findOrCreateUser($oauthUser, $provider)
+{
+    $existingOAuth = SocialAuth::where('provider_name', $provider)
+        ->where('provider_id', $oauthUser->getId())
+        ->first();
+
+    if ($existingOAuth) {
+        return $existingOAuth->user;
+    } else {
+        $user = User::whereEmail($oauthUser->getEmail())->first();
+
+        if (!$user) {
+            $user = User::create([
+                'email' => $oauthUser->getEmail(),
+                'name'  => $oauthUser->getName(),
+            ]);
+        }
+
+        $user->oauth()->create([
+            'provider_id'   => $oauthUser->getId(),
+            'provider_name' => $provider,
+        ]);
+
+        return $user;
+    }
+}
+
+```
+
+
+13. in der user migration Datei für das password Feld nullable() einfügen und fresh migrieren
+
+```
+$table->string('password')->nullable();
+```
+
+
+
+```
+php artisan migrate:fresh
+```
+
+14. einen Link zur Anmeldung über Github in das Login-Formular einbauen:
+in resources/views/auth/login.blade.php:
+
+```
+...
+                    </form>
+
+                    <a href="/auth/github">Login mit Github</a>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+```
+
+
+**Test:**
+
+User Login mit Github:
+
+http://advanced-laravel.test/login
+
+
+
