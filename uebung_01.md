@@ -28,8 +28,6 @@ Anpassen der hosts Datei in Windows:
 
 ```
 
-```
-
 Installation von Laravel per composer in der CMD im Ordner wo auch routinglaravel installiert wurde:
 
 ```
