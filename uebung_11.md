@@ -213,8 +213,9 @@ use Illuminate\Auth\Access\Response; // wenn noch nicht vorhanden
 ```
 11. In der welcome.blade.php:
 einen Link hinzufügen:
-    ```
+
+```
 @can('delete-user','App\Models\User')
 <a href="/user/{{auth()->user()->id}}/delete">Account loschen</a>
 @endcan
-    ```
+```
