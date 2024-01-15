@@ -122,11 +122,11 @@ php artisan tinker
 //meine user id ist 1
 $user = Auth::loginUsingId(1);
 
-$role = App\Role::firstOrCreate([
+$role = App\Models\Role::firstOrCreate([
   'name' => 'administrator',
 ]);
 
-$ability = App\Ability::firstOrCreate([
+$ability = App\Models\Ability::firstOrCreate([
     'name' => 'always-toggle-post',
 ]);
 
