@@ -180,7 +180,7 @@ In der View muss der Link nun wie folgt geschützt werden:
 ```
 
 9.
-Die Route zum Umschalten muss ebenfalss angepasst werden:
+Die Route zum Umschalten muss ebenfalls angepasst werden:
 
 ```
 Route::get('post/{post}/toggle', function (App\Post $post) {
@@ -194,3 +194,21 @@ Route::get('post/{post}/toggle', function (App\Post $post) {
 
 
 ```
+
+10. zum Löschen des Users, die eigentliche Aufgabe:
+
+im AuthServiceProvider.php:
+```
+use Illuminate\Auth\Access\Response; // wenn noch nicht vorhanden
+
+ public function boot(): void
+{
+ ....
+    // ein Gate hinufügen
+    Gate::define('delete-user', function (User $auth, User $user) {
+            return $auth->is($user)
+            ? Response::allow()
+            : Response::deny('You cannot delete this User because its not yours');
+        });
+```
+
