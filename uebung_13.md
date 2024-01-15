@@ -52,7 +52,7 @@ Route::post('upload_uebung_13', function (Request $request) {
 ```
 
 2. eine view anegen:
-uebung_13.blade.php
+upload_uebung_13.blade.php
 
 ```
 @extends('layouts.app')
