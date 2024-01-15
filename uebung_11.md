@@ -219,3 +219,16 @@ einen Link hinzufügen:
 <a href="/user/{{auth()->user()->id}}/delete">Account loschen</a>
 @endcan
 ```
+
+12. in der web.php die route zum loeschen einfuegen:
+```
+  Route::get('user/{user}/delete', function (App\Models\User $user) {
+        if (Gate::none(['delete-user', 'delete-other-users'], $user)) {
+            abort(403);
+        }
+        $user->oauth()->delete();
+        $user->delete();
+    
+        return redirect('/');
+    });
+```
