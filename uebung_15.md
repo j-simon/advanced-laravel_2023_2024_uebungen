@@ -28,6 +28,8 @@ in app\Mails gibt es nun Quote.php
 GAAANZ WICHTIG !
 
 entferne die 3 Methoden envelope(), content() und attachments()
+ODER
+nutze diese und nicht die nachfolgende build()-Methode
 
 4.
 
