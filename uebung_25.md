@@ -120,6 +120,9 @@ php artisan queue:work
 9.
 Upload eines Bildes durchführen!
 
+http://advanced-laravel.test/upload_uebung_13
+
+
 **Test:**
 In mailtrap sollte eine Mail angekommen sein!
 
